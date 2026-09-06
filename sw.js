@@ -1,16 +1,15 @@
-const CACHE = "vena-steam-demo-v5";
+const CACHE = "vena-steam-demo-v7";
 const PRECACHE = [
 	"./index.html",
-	"./index.js",
-	"./index.wasm",
-	"./index.png",
-	"./index.icon.png",
-	"./index.apple-touch-icon.png",
-	"./index.audio.worklet.js",
-	"./index.audio.position.worklet.js",
-	"./vena-boot.js",
-	"./play.html",
 	"./vena.html",
+	"./vena-boot.js",
+	"./packages/index.js",
+	"./packages/index.wasm",
+	"./assets/index.png",
+	"./assets/index.icon.png",
+	"./assets/index.apple-touch-icon.png",
+	"./packages/index.audio.worklet.js",
+	"./packages/index.audio.position.worklet.js",
 ];
 
 self.addEventListener("install", (event) => {

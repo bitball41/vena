@@ -142,17 +142,17 @@ screen_shake_intensity=1.0
 	let downloaded = 0;
 	let lastPct = 0;
 	let phase = "download";
+	let pkDone = 0;
 
 	function bump(n) {
 		downloaded += n;
 		paint();
 	}
 
-	function paint(forcePct, labelText) {
+	function paint(forcePct) {
 		const fill = document.getElementById("status-fill");
-		const percent = document.getElementById("status-percent");
 		const label = document.getElementById("status-label");
-		if (!fill || !percent || !label) return;
+		if (!fill || !label) return;
 		let pct;
 		if (typeof forcePct === "number") {
 			pct = forcePct;
@@ -162,14 +162,7 @@ screen_shake_intensity=1.0
 		pct = Math.max(lastPct, Math.min(100, pct));
 		lastPct = pct;
 		fill.style.width = pct + "%";
-		percent.textContent = pct + "%";
-		if (labelText) {
-			label.textContent = labelText;
-		} else if (phase === "start") {
-			label.textContent = "Starting VENA…";
-		} else {
-			label.textContent = "Loading  " + pct + "%  ·  " + mb(Math.min(downloaded, TOTAL_BYTES)) + " / " + mb(TOTAL_BYTES) + " MB";
-		}
+		label.textContent = pct + "%  " + mb(Math.min(downloaded, TOTAL_BYTES)) + " / " + mb(TOTAL_BYTES) + " MB  pk " + pkDone + "/" + PCK_PARTS;
 	}
 
 	async function fetchTracked(url) {
@@ -203,7 +196,13 @@ screen_shake_intensity=1.0
 
 	async function mergeParts(base, count, expected, mime) {
 		const buffers = await Promise.all(Array.from({ length: count }, function (_, i) {
-			return fetchTracked(base + ".part" + (i + 1));
+			return fetchTracked(base + ".part" + (i + 1)).then(function (buf) {
+				if (base.indexOf("index.pck") !== -1) {
+					pkDone += 1;
+					paint();
+				}
+				return buf;
+			});
 		}));
 		let loaded = 0;
 		for (let i = 0; i < buffers.length; i++) {
@@ -271,8 +270,6 @@ screen_shake_intensity=1.0
 		const statusOverlay = document.getElementById("status");
 		const statusProgress = document.getElementById("status-progress");
 		const statusNotice = document.getElementById("status-notice");
-		const fpsGraph = document.getElementById("fps-graph");
-		const fpsCanvas = document.getElementById("fps-canvas");
 
 		let initializing = true;
 		let statusMode = "";
@@ -284,11 +281,12 @@ screen_shake_intensity=1.0
 			if (mode === "hidden") {
 				statusOverlay.remove();
 				initializing = false;
-				startFps();
 				return;
 			}
 			statusOverlay.style.visibility = "visible";
-			statusProgress.style.display = mode === "progress" ? "flex" : "none";
+			if (statusProgress) {
+				statusProgress.style.display = mode === "progress" ? "flex" : "none";
+			}
 			statusNotice.style.display = mode === "notice" ? "block" : "none";
 			statusMode = mode;
 		}
@@ -312,36 +310,6 @@ screen_shake_intensity=1.0
 			}
 			setStatusMode("notice");
 			initializing = false;
-		}
-
-		function startFps() {
-			if (!fpsCanvas || !fpsGraph) return;
-			const ctx = fpsCanvas.getContext("2d");
-			const hist = [];
-			let last = performance.now();
-			let frames = 0;
-			function tick(now) {
-				frames++;
-				const fps = 1000 / Math.max(now - last, 1);
-				last = now;
-				if (frames % 2 === 0) {
-					hist.push(fps);
-					if (hist.length > 74) hist.shift();
-					ctx.clearRect(0, 0, 148, 44);
-					for (let i = 0; i < hist.length; i++) {
-						const f = hist[i];
-						const h = Math.min(f / 30, 1) * 28;
-						ctx.fillStyle = f > 26 ? "#6f6" : f > 20 ? "#fa3" : "#f44";
-						ctx.fillRect(i * 2, 44 - h, 1.7, h);
-					}
-					ctx.fillStyle = "#fff";
-					ctx.font = "bold 12px monospace";
-					ctx.fillText(Math.round(fps) + " FPS", 6, 14);
-				}
-				requestAnimationFrame(tick);
-			}
-			fpsGraph.style.display = "block";
-			requestAnimationFrame(tick);
 		}
 
 		const gameCanvas = document.getElementById("canvas");

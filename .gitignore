@@ -1,2 +1,3 @@
-index.pck
-index.side.wasm
+packages/index.pck
+packages/index.side.wasm
+__pycache__/
