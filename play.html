@@ -37,23 +37,6 @@ body {
 #canvas:focus {
 	outline: none;
 }
-#port-credit {
-	position: absolute;
-	left: 0.9%;
-	bottom: 1.4%;
-	z-index: 5;
-	pointer-events: none;
-	font-family: "Courier New", Courier, monospace;
-	font-size: clamp(7px, 1.05vw, 11px);
-	font-weight: 700;
-	letter-spacing: 0.02em;
-	color: #efe6ce;
-	text-shadow: 1px 1px 0 #140810, 0 0 6px rgba(0, 0, 0, 0.85);
-	background: rgba(16, 8, 14, 0.82);
-	padding: 3px 7px 4px;
-	line-height: 1.2;
-	white-space: nowrap;
-}
 #status {
 	position: fixed;
 	inset: 0;
@@ -161,7 +144,6 @@ body {
 	<body>
 		<div id="wrap">
 			<canvas id="canvas">Your browser does not support the canvas tag.</canvas>
-			<div id="port-credit" hidden>port done by @connoreal / bitball41</div>
 		</div>
 		<noscript>Your browser does not support JavaScript.</noscript>
 		<div id="status">
@@ -178,7 +160,7 @@ body {
 window.VENA_LAUNCH = {
 	base: "",
 	executable: "index",
-	pckBytes: 154862072,
+	pckBytes: 154853584,
 	pckParts: 8,
 	wasmBytes: 1508095,
 	sideWasmBytes: 44072184,
@@ -186,7 +168,7 @@ window.VENA_LAUNCH = {
 	renderCap: { w: 960, h: 540 },
 };
 		</script>
-		<script src="index.js?v=real48"></script>
-		<script src="vena-boot.js?v=real48"></script>
+		<script src="index.js?v=real49"></script>
+		<script src="vena-boot.js?v=real49"></script>
 	</body>
 </html>
