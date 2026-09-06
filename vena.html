@@ -68,8 +68,8 @@ body {
 	text-align: center;
 }
 		</style>
-		<link rel="icon" type="image/png" href="assets/index.icon.png">
-		<link rel="apple-touch-icon" href="assets/index.apple-touch-icon.png">
+		<link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/bitball41/vena@7a30dea99ad67572dc055e13dc742d40c00d5d25/assets/index.icon.png">
+		<link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/bitball41/vena@7a30dea99ad67572dc055e13dc742d40c00d5d25/assets/index.apple-touch-icon.png">
 	</head>
 	<body>
 		<div id="wrap">
@@ -84,9 +84,12 @@ body {
 			<div id="status-notice"></div>
 		</div>
 		<script>
+const CDN = "https://cdn.jsdelivr.net/gh/bitball41/vena@7a30dea99ad67572dc055e13dc742d40c00d5d25/";
+const PKG = CDN + "packages/";
 window.VENA_LAUNCH = {
-	base: "packages/",
-	executable: "packages/index",
+	base: PKG,
+	executable: PKG + "index",
+	workletBase: PKG,
 	pckBytes: 154862663,
 	pckParts: 8,
 	wasmBytes: 1508095,
@@ -95,7 +98,7 @@ window.VENA_LAUNCH = {
 	renderCap: { w: 960, h: 540 },
 };
 		</script>
-		<script src="packages/index.js"></script>
-		<script src="vena-boot.js"></script>
+		<script src="https://cdn.jsdelivr.net/gh/bitball41/vena@7a30dea99ad67572dc055e13dc742d40c00d5d25/packages/index.js"></script>
+		<script src="https://cdn.jsdelivr.net/gh/bitball41/vena@7a30dea99ad67572dc055e13dc742d40c00d5d25/vena-boot.js"></script>
 	</body>
 </html>
