@@ -273,7 +273,6 @@ screen_shake_intensity=1.0
 		const statusNotice = document.getElementById("status-notice");
 		const fpsGraph = document.getElementById("fps-graph");
 		const fpsCanvas = document.getElementById("fps-canvas");
-		const credit = document.getElementById("port-credit");
 
 		let initializing = true;
 		let statusMode = "";
@@ -285,7 +284,6 @@ screen_shake_intensity=1.0
 			if (mode === "hidden") {
 				statusOverlay.remove();
 				initializing = false;
-				if (credit) credit.hidden = false;
 				startFps();
 				return;
 			}
