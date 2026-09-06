@@ -193,18 +193,48 @@ class GodotProcessor extends AudioWorkletProcessor {
 
 	static write_output(dest, source) {
 		const channels = dest.length;
+		const frames = dest[0].length;
+		if (channels === 2) {
+			const left = dest[0];
+			const right = dest[1];
+			for (let i = 0, s = 0; i < frames; i++, s += 2) {
+				left[i] = source[s];
+				right[i] = source[s + 1];
+			}
+			return;
+		}
+		if (channels === 1) {
+			dest[0].set(source.subarray(0, frames));
+			return;
+		}
 		for (let ch = 0; ch < channels; ch++) {
-			for (let sample = 0; sample < dest[ch].length; sample++) {
-				dest[ch][sample] = source[sample * channels + ch];
+			const out = dest[ch];
+			for (let sample = 0; sample < frames; sample++) {
+				out[sample] = source[sample * channels + ch];
 			}
 		}
 	}
 
 	static write_input(dest, source) {
 		const channels = source.length;
+		const frames = source[0].length;
+		if (channels === 2) {
+			const left = source[0];
+			const right = source[1];
+			for (let i = 0, s = 0; i < frames; i++, s += 2) {
+				dest[s] = left[i];
+				dest[s + 1] = right[i];
+			}
+			return;
+		}
+		if (channels === 1) {
+			dest.set(source[0]);
+			return;
+		}
 		for (let ch = 0; ch < channels; ch++) {
-			for (let sample = 0; sample < source[ch].length; sample++) {
-				dest[sample * channels + ch] = source[ch][sample];
+			const inp = source[ch];
+			for (let sample = 0; sample < frames; sample++) {
+				dest[sample * channels + ch] = inp[sample];
 			}
 		}
 	}
