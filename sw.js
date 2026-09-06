@@ -1,4 +1,4 @@
-const CACHE = "vena-steam-demo-v3";
+const CACHE = "vena-steam-demo-v4";
 const PRECACHE = [
 	"./index.html",
 	"./index.js",

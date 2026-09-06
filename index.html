@@ -20,9 +20,8 @@
 <body>
 	<iframe id="game" src="play.html" allow="autoplay; fullscreen; gamepad" allowfullscreen></iframe>
 	<script>
-		const chromeos = /CrOS/i.test(navigator.userAgent);
-		const w = chromeos ? 960 : 1280;
-		const h = chromeos ? 540 : 720;
+		const w = 960;
+		const h = 540;
 		document.documentElement.style.setProperty("--vena-w", w + "px");
 		document.documentElement.style.setProperty("--vena-h", h + "px");
 		const frame = document.getElementById("game");
