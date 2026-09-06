@@ -133,7 +133,8 @@ try {
 } catch (err) {}
 const GODOT_CONFIG = {
 	args: [],
-	canvasResizePolicy: 2,
+	canvas: document.getElementById("canvas"),
+	canvasResizePolicy: 0,
 	emscriptenPoolSize: 4,
 	ensureCrossOriginIsolationHeaders: false,
 	executable: CDN + "index",
@@ -333,6 +334,10 @@ if (navigator.storage && navigator.storage.persist) {
 		fpsGraph.style.display = "block";
 		requestAnimationFrame(tick);
 	}
+
+	const gameCanvas = document.getElementById("canvas");
+	gameCanvas.width = RENDER_CAP.w;
+	gameCanvas.height = RENDER_CAP.h;
 
 	if (typeof Engine === "undefined") {
 		displayFailureNotice("Godot engine script failed to load from jsDelivr.");

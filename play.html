@@ -132,7 +132,8 @@ try {
 } catch (err) {}
 const GODOT_CONFIG = {
 	args: [],
-	canvasResizePolicy: 2,
+	canvas: document.getElementById("canvas"),
+	canvasResizePolicy: 0,
 	emscriptenPoolSize: 4,
 	ensureCrossOriginIsolationHeaders: false,
 	executable: "index",
@@ -328,6 +329,10 @@ if (navigator.storage && navigator.storage.persist) {
 		fpsGraph.style.display = "block";
 		requestAnimationFrame(tick);
 	}
+
+	const gameCanvas = document.getElementById("canvas");
+	gameCanvas.width = RENDER_CAP.w;
+	gameCanvas.height = RENDER_CAP.h;
 
 	const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
 	if (missing.length !== 0) {
