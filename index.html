@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+	<title>Vena Demo</title>
+	<style>
+		html, body { margin: 0; height: 100%; background: #100c15; }
+		body { display: flex; align-items: center; justify-content: center; }
+		iframe {
+			border: 0;
+			background: #100c15;
+			width: var(--vena-w, 1280px);
+			height: var(--vena-h, 720px);
+			max-width: 100vw;
+			max-height: 100vh;
+		}
+	</style>
+</head>
+<body>
+	<iframe id="game" src="play.html" allow="autoplay; fullscreen; gamepad" allowfullscreen></iframe>
+	<script>
+		const chromeos = /CrOS/i.test(navigator.userAgent);
+		const w = chromeos ? 960 : 1280;
+		const h = chromeos ? 540 : 720;
+		document.documentElement.style.setProperty("--vena-w", w + "px");
+		document.documentElement.style.setProperty("--vena-h", h + "px");
+		const frame = document.getElementById("game");
+		frame.width = w;
+		frame.height = h;
+	</script>
+</body>
+</html>

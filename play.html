@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>Vena Demo</title>
+		<style>
+html, body {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	width: 100%;
+	height: 100%;
+}
+body {
+	color: white;
+	background-color: #100c15;
+	overflow: hidden;
+	touch-action: none;
+	font-family: "Noto Sans", "Droid Sans", Arial, sans-serif;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+#wrap {
+	width: min(var(--vena-w, 1280px), 100vw);
+	aspect-ratio: 16 / 9;
+	max-height: 100vh;
+	position: relative;
+}
+#canvas {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+#canvas:focus {
+	outline: none;
+}
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
+#status {
+	background-color: #100c15;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+	gap: 16px;
+	z-index: 2;
+}
+#status-splash {
+	max-height: 55%;
+	max-width: 80%;
+	margin: 0 auto;
+	object-fit: contain;
+}
+#status-progress {
+	display: none;
+	bottom: auto;
+	width: min(480px, 70vw);
+	height: 14px;
+}
+#status-label {
+	font-size: 16px;
+	letter-spacing: 0.04em;
+	color: #e0e0e0;
+}
+#status-notice {
+	display: none;
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+#fps-graph {
+	position: fixed;
+	top: 10px;
+	left: 10px;
+	width: 160px;
+	height: 56px;
+	background: rgba(0, 0, 0, 0.72);
+	border-radius: 6px;
+	padding: 6px;
+	z-index: 9;
+	display: none;
+}
+#fps-canvas {
+	width: 100%;
+	height: 100%;
+	display: block;
+}
+		</style>
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png">
+		<link rel="apple-touch-icon" href="index.apple-touch-icon.png">
+	</head>
+	<body>
+		<div id="wrap">
+		<canvas id="canvas">Your browser does not support the canvas tag.</canvas>
+		</div>
+		<noscript>Your browser does not support JavaScript.</noscript>
+		<div id="status">
+			<img id="status-splash" class="fullsize--true" src="index.png" alt="Vena">
+			<div id="status-label">Loading Steam demo…</div>
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
+		<div id="fps-graph"><canvas id="fps-canvas" width="148" height="44"></canvas></div>
+		<script src="index.js?v=real45"></script>
+		<script>
+const PCK_BYTES = 154862072;
+const PCK_PARTS = 8;
+const WASM_BYTES = 1508095;
+const SIDE_WASM_BYTES = 44072184;
+const IS_CHROMEBOOK = /CrOS/i.test(navigator.userAgent);
+const RENDER_CAP = IS_CHROMEBOOK ? { w: 960, h: 540 } : { w: 1280, h: 720 };
+document.documentElement.style.setProperty("--vena-w", RENDER_CAP.w + "px");
+const GODOT_CONFIG = {
+	args: [],
+	canvasResizePolicy: 2,
+	emscriptenPoolSize: 4,
+	ensureCrossOriginIsolationHeaders: false,
+	executable: "index",
+	experimentalVK: false,
+	fileSizes: { "index.pck": PCK_BYTES, "index.wasm": WASM_BYTES, "index.side.wasm": SIDE_WASM_BYTES },
+	focusCanvas: true,
+	gdextensionLibs: [],
+	godotPoolSize: 2,
+};
+const GODOT_THREADS_ENABLED = false;
+
+const nativeFetch = window.fetch.bind(window);
+let pckBlobPromise = null;
+
+function mb(n) {
+	return (n / 1048576).toFixed(1);
+}
+
+async function mergePckParts(onBytes) {
+	const buffers = [];
+	let loaded = 0;
+	for (let i = 1; i <= PCK_PARTS; i++) {
+		const response = await nativeFetch("index.pck.part" + i);
+		if (!response.ok) {
+			throw new Error("Failed loading file 'index.pck.part" + i + "'");
+		}
+		const buf = await response.arrayBuffer();
+		loaded += buf.byteLength;
+		onBytes(loaded, PCK_BYTES);
+		buffers.push(buf);
+	}
+	if (loaded !== PCK_BYTES) {
+		throw new Error("Packed demo size mismatch (" + loaded + " != " + PCK_BYTES + ")");
+	}
+	return new Blob(buffers, { type: "application/octet-stream" });
+}
+
+function patchedFetch(input, init) {
+	const url = typeof input === "string" ? input : (input && input.url) || "";
+	if (url.includes("index.pck") && !url.includes(".part")) {
+		pckBlobPromise = pckBlobPromise || mergePckParts(() => {});
+		return pckBlobPromise.then((blob) => new Response(blob, {
+			headers: { "Content-Type": "application/octet-stream" },
+		}));
+	}
+	return nativeFetch(input, init);
+}
+window.fetch = patchedFetch;
+
+const engine = new Engine(GODOT_CONFIG);
+
+if (navigator.storage && navigator.storage.persist) {
+	navigator.storage.persist().catch(() => {});
+}
+
+(function () {
+	const statusOverlay = document.getElementById("status");
+	const statusProgress = document.getElementById("status-progress");
+	const statusNotice = document.getElementById("status-notice");
+	const statusLabel = document.getElementById("status-label");
+	const fpsGraph = document.getElementById("fps-graph");
+	const fpsCanvas = document.getElementById("fps-canvas");
+
+	let initializing = true;
+	let statusMode = "";
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === "hidden") {
+			statusOverlay.remove();
+			initializing = false;
+			startFps();
+			return;
+		}
+		statusOverlay.style.visibility = "visible";
+		statusProgress.style.display = mode === "progress" ? "block" : "none";
+		statusNotice.style.display = mode === "notice" ? "block" : "none";
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		statusNotice.textContent = "";
+		text.split("\n").forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement("br"));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === "string") {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice("An unknown error occurred.");
+		}
+		setStatusMode("notice");
+		initializing = false;
+	}
+
+	function startFps() {
+		const ctx = fpsCanvas.getContext("2d");
+		const hist = [];
+		let last = performance.now();
+		function tick(now) {
+			const fps = 1000 / Math.max(now - last, 1);
+			last = now;
+			hist.push(fps);
+			if (hist.length > 74) hist.shift();
+			ctx.clearRect(0, 0, 148, 44);
+			for (let i = 0; i < hist.length; i++) {
+				const f = hist[i];
+				const h = Math.min(f / 60, 1) * 28;
+				ctx.fillStyle = f > 45 ? "#6f6" : f > 28 ? "#fa3" : "#f44";
+				ctx.fillRect(i * 2, 44 - h, 1.7, h);
+			}
+			ctx.fillStyle = "#fff";
+			ctx.font = "bold 12px monospace";
+			ctx.fillText(Math.round(fps) + " FPS", 6, 14);
+			requestAnimationFrame(tick);
+		}
+		fpsGraph.style.display = "block";
+		requestAnimationFrame(tick);
+	}
+
+	const missing = Engine.getMissingFeatures({ threads: GODOT_THREADS_ENABLED });
+	if (missing.length !== 0) {
+		displayFailureNotice("Missing browser features:\n" + missing.join("\n"));
+		return;
+	}
+
+	setStatusMode("progress");
+	statusProgress.value = 0;
+	statusProgress.max = PCK_BYTES;
+	statusLabel.textContent = "Loading Steam demo  0.0 / " + mb(PCK_BYTES) + " MB";
+	pckBlobPromise = mergePckParts(function (current, total) {
+		statusProgress.value = current;
+		statusProgress.max = total;
+		statusLabel.textContent = "Loading Steam demo  " + mb(current) + " / " + mb(total) + " MB";
+	}).then(function (blob) {
+		statusLabel.textContent = "Starting…";
+		return blob;
+	}).catch(displayFailureNotice);
+
+	engine.startGame({
+		onProgress: function (current, total) {
+			if (current > 0 && total > 0) {
+				statusProgress.value = current;
+				statusProgress.max = total;
+				statusLabel.textContent = "Loading Steam demo  " + mb(current) + " / " + mb(total) + " MB";
+			} else {
+				statusProgress.removeAttribute("value");
+				statusProgress.removeAttribute("max");
+				statusLabel.textContent = "Starting…";
+			}
+		},
+	}).then(() => setStatusMode("hidden"), displayFailureNotice);
+}());
+		</script>
+	</body>
+</html>
