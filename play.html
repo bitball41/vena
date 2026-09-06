@@ -23,9 +23,8 @@ body {
 	justify-content: center;
 }
 #wrap {
-	width: min(var(--vena-w, 1280px), 100vw);
-	aspect-ratio: 16 / 9;
-	max-height: 100vh;
+	width: 100vw;
+	height: 100vh;
 	position: relative;
 }
 #canvas {
@@ -64,7 +63,7 @@ body {
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	visibility: hidden;
+	visibility: visible;
 	gap: 18px;
 	z-index: 2;
 }
@@ -75,7 +74,7 @@ body {
 	filter: drop-shadow(0 0 28px rgba(168, 24, 48, 0.45));
 }
 #status-progress {
-	display: none;
+	display: flex;
 	flex-direction: column;
 	align-items: stretch;
 	width: min(440px, 74vw);
@@ -187,7 +186,7 @@ window.VENA_LAUNCH = {
 	renderCap: { w: 960, h: 540 },
 };
 		</script>
-		<script src="index.js?v=real47"></script>
-		<script src="vena-boot.js?v=real47"></script>
+		<script src="index.js?v=real48"></script>
+		<script src="vena-boot.js?v=real48"></script>
 	</body>
 </html>
