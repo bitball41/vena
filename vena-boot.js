@@ -4,6 +4,7 @@
 
 	const L = window.VENA_LAUNCH || {};
 	const BASE = L.base || "";
+	const WORKLET_BASE = L.workletBase || BASE || document.baseURI;
 	const PCK_BYTES = L.pckBytes;
 	const PCK_PARTS = L.pckParts;
 	const WASM_BYTES = L.wasmBytes;
@@ -12,7 +13,6 @@
 	const RENDER_CAP = L.renderCap || { w: 960, h: 540 };
 	const TOTAL_BYTES = PCK_BYTES + SIDE_WASM_BYTES + WASM_BYTES;
 
-	document.documentElement.style.setProperty("--vena-w", RENDER_CAP.w + "px");
 	try {
 		Object.defineProperty(window, "devicePixelRatio", {
 			configurable: true,
@@ -38,10 +38,10 @@
 			AudioWorklet.prototype.addModule = function (url, init) {
 				const href = String(url);
 				if (href.includes("audio.worklet.js") && !href.includes("position")) {
-					return orig.call(this, new URL("index.audio.worklet.js", document.baseURI).href, init);
+					return orig.call(this, new URL("index.audio.worklet.js", WORKLET_BASE).href, init);
 				}
 				if (href.includes("audio.position.worklet.js")) {
-					return orig.call(this, new URL("index.audio.position.worklet.js", document.baseURI).href, init);
+					return orig.call(this, new URL("index.audio.position.worklet.js", WORKLET_BASE).href, init);
 				}
 				return orig.call(this, url, init);
 			};
@@ -349,10 +349,6 @@ screen_shake_intensity=1.0
 		const gameCanvas = document.getElementById("canvas");
 		gameCanvas.width = RENDER_CAP.w;
 		gameCanvas.height = RENDER_CAP.h;
-		const gctx = gameCanvas.getContext("2d");
-		if (gctx) {
-			gctx.imageSmoothingEnabled = false;
-		}
 
 		const missing = Engine.getMissingFeatures({ threads: false });
 		if (missing.length !== 0) {
