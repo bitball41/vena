@@ -4,7 +4,14 @@
 
 	const L = window.VENA_LAUNCH || {};
 	const BASE = L.base || "";
-	const WORKLET_BASE = L.workletBase || BASE || document.baseURI;
+	function absUrl(value) {
+		try {
+			return new URL(value || ".", document.baseURI).href;
+		} catch (err) {
+			return new URL(".", document.baseURI).href;
+		}
+	}
+	const WORKLET_BASE = absUrl(L.workletBase || BASE || ".");
 	const PCK_BYTES = L.pckBytes;
 	const PCK_PARTS = L.pckParts;
 	const WASM_BYTES = L.wasmBytes;

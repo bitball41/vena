@@ -94,7 +94,7 @@ document.getElementById("vena-apple").href = ASSETS + "index.apple-touch-icon.pn
 window.VENA_LAUNCH = {
 	base: PKG,
 	executable: PKG + "index",
-	workletBase: PKG,
+	workletBase: new URL(PKG, location.href).href,
 	pckBytes: 154862663,
 	pckParts: 8,
 	wasmBytes: 1508095,
