@@ -27,7 +27,7 @@ class Handler(SimpleHTTPRequestHandler):
         code = getattr(self, "_vena_code", 200)
         if 200 <= code < 300:
             name = self.path.split("?", 1)[0]
-            if name.endswith((".pck", ".wasm", ".js", ".png")) or ".pck.part" in name:
+            if name.endswith((".pck", ".wasm", ".js", ".png")) or ".part" in name:
                 self.send_header("Cache-Control", "public, max-age=86400")
             else:
                 self.send_header("Cache-Control", "no-cache")

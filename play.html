@@ -124,6 +124,7 @@ const PCK_BYTES = 154862072;
 const PCK_PARTS = 8;
 const WASM_BYTES = 1508095;
 const SIDE_WASM_BYTES = 44072184;
+const SIDE_WASM_PARTS = 3;
 const IS_CHROMEBOOK = /CrOS/i.test(navigator.userAgent);
 const RENDER_CAP = IS_CHROMEBOOK ? { w: 960, h: 540 } : { w: 1280, h: 720 };
 document.documentElement.style.setProperty("--vena-w", RENDER_CAP.w + "px");
@@ -142,38 +143,53 @@ const GODOT_CONFIG = {
 const GODOT_THREADS_ENABLED = false;
 
 const nativeFetch = window.fetch.bind(window);
-let pckBlobPromise = null;
+const mergedBlobs = {};
 
 function mb(n) {
 	return (n / 1048576).toFixed(1);
 }
 
-async function mergePckParts(onBytes) {
+function requestUrl(input) {
+	if (typeof input === "string") return input;
+	if (input instanceof URL) return input.href;
+	if (input && input.url) return input.url;
+	return "";
+}
+
+async function mergeParts(base, count, expected, mime, onBytes) {
 	const buffers = [];
 	let loaded = 0;
-	for (let i = 1; i <= PCK_PARTS; i++) {
-		const response = await nativeFetch("index.pck.part" + i);
+	for (let i = 1; i <= count; i++) {
+		const part = base + ".part" + i;
+		const response = await nativeFetch(part);
 		if (!response.ok) {
-			throw new Error("Failed loading file 'index.pck.part" + i + "'");
+			throw new Error("Failed loading file '" + part + "'");
 		}
 		const buf = await response.arrayBuffer();
 		loaded += buf.byteLength;
-		onBytes(loaded, PCK_BYTES);
+		onBytes(loaded, expected);
 		buffers.push(buf);
 	}
-	if (loaded !== PCK_BYTES) {
-		throw new Error("Packed demo size mismatch (" + loaded + " != " + PCK_BYTES + ")");
+	if (loaded !== expected) {
+		throw new Error("Size mismatch for " + base + " (" + loaded + " != " + expected + ")");
 	}
-	return new Blob(buffers, { type: "application/octet-stream" });
+	return new Blob(buffers, { type: mime });
+}
+
+function blobResponse(key, factory) {
+	mergedBlobs[key] = mergedBlobs[key] || factory();
+	return mergedBlobs[key].then((blob) => new Response(blob, {
+		headers: { "Content-Type": blob.type || "application/octet-stream" },
+	}));
 }
 
 function patchedFetch(input, init) {
-	const url = typeof input === "string" ? input : (input && input.url) || "";
+	const url = requestUrl(input);
 	if (url.includes("index.pck") && !url.includes(".part")) {
-		pckBlobPromise = pckBlobPromise || mergePckParts(() => {});
-		return pckBlobPromise.then((blob) => new Response(blob, {
-			headers: { "Content-Type": "application/octet-stream" },
-		}));
+		return blobResponse("pck", () => mergeParts("index.pck", PCK_PARTS, PCK_BYTES, "application/octet-stream", () => {}));
+	}
+	if (url.includes("index.side.wasm") && !url.includes(".part")) {
+		return blobResponse("side", () => mergeParts("index.side.wasm", SIDE_WASM_PARTS, SIDE_WASM_BYTES, "application/wasm", () => {}));
 	}
 	return nativeFetch(input, init);
 }
@@ -265,16 +281,28 @@ if (navigator.storage && navigator.storage.persist) {
 	}
 
 	setStatusMode("progress");
-	statusProgress.value = 0;
-	statusProgress.max = PCK_BYTES;
-	statusLabel.textContent = "Loading Steam demo  0.0 / " + mb(PCK_BYTES) + " MB";
-	pckBlobPromise = mergePckParts(function (current, total) {
+	const stitchTotal = PCK_BYTES + SIDE_WASM_BYTES;
+	let pckLoaded = 0;
+	let sideLoaded = 0;
+	function stitchProgress() {
+		const current = pckLoaded + sideLoaded;
 		statusProgress.value = current;
-		statusProgress.max = total;
-		statusLabel.textContent = "Loading Steam demo  " + mb(current) + " / " + mb(total) + " MB";
-	}).then(function (blob) {
+		statusProgress.max = stitchTotal;
+		statusLabel.textContent = "Loading Steam demo  " + mb(current) + " / " + mb(stitchTotal) + " MB";
+	}
+	statusProgress.value = 0;
+	statusProgress.max = stitchTotal;
+	stitchProgress();
+	mergedBlobs.pck = mergeParts("index.pck", PCK_PARTS, PCK_BYTES, "application/octet-stream", function (current) {
+		pckLoaded = current;
+		stitchProgress();
+	});
+	mergedBlobs.side = mergeParts("index.side.wasm", SIDE_WASM_PARTS, SIDE_WASM_BYTES, "application/wasm", function (current) {
+		sideLoaded = current;
+		stitchProgress();
+	});
+	Promise.all([mergedBlobs.pck, mergedBlobs.side]).then(function () {
 		statusLabel.textContent = "Starting…";
-		return blob;
 	}).catch(displayFailureNotice);
 
 	engine.startGame({
