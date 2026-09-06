@@ -5,19 +5,13 @@
 		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
 		<title>Vena Demo</title>
 		<style>
-html, body {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	width: 100%;
-	height: 100%;
-}
+html, body { margin: 0; padding: 0; width: 100%; height: 100%; }
 body {
-	color: #f3ead2;
-	background-color: #100c15;
+	color: #222;
+	background: #c0c0c0;
 	overflow: hidden;
 	touch-action: none;
-	font-family: "Palatino Linotype", Palatino, "Times New Roman", serif;
+	font-family: sans-serif;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -32,114 +26,50 @@ body {
 	width: 100%;
 	height: 100%;
 	image-rendering: pixelated;
-	image-rendering: crisp-edges;
 }
-#canvas:focus {
-	outline: none;
-}
+#canvas:focus { outline: none; }
 #status {
 	position: fixed;
 	inset: 0;
-	background:
-		radial-gradient(ellipse at 50% 38%, #4a1824 0%, #1a0c14 48%, #100c15 100%);
+	background: #c0c0c0;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
 	visibility: visible;
-	gap: 18px;
 	z-index: 2;
-}
-#status-splash {
-	max-height: 46%;
-	max-width: 72%;
-	object-fit: contain;
-	filter: drop-shadow(0 0 28px rgba(168, 24, 48, 0.45));
 }
 #status-progress {
 	display: flex;
 	flex-direction: column;
 	align-items: stretch;
-	width: min(440px, 74vw);
-	gap: 10px;
-	z-index: 3;
+	width: min(420px, 70vw);
 }
-#status-percent {
-	text-align: center;
-	font-size: clamp(28px, 5vw, 42px);
-	font-weight: 700;
-	letter-spacing: 0.14em;
-	color: #f3ead2;
-	text-shadow: 0 0 18px rgba(200, 40, 60, 0.45);
-	font-variant-numeric: tabular-nums;
-}
-#status-track {
-	height: 16px;
-	border: 2px solid #c9b896;
-	background: #14080e;
-	box-shadow: 0 0 16px rgba(140, 20, 40, 0.35), inset 0 0 8px #000;
-	overflow: hidden;
-	position: relative;
+#bar {
+	height: 18px;
+	background: #e0e0e0;
+	border: 1px solid #808080;
 }
 #status-fill {
-	position: relative;
 	height: 100%;
 	width: 0%;
-	background: linear-gradient(180deg, #ff7a72 0%, #c42838 42%, #6e121c 100%);
-	box-shadow: inset 0 0 10px rgba(255, 180, 180, 0.45);
-	transition: width 80ms linear;
-}
-#status-fill::after {
-	content: "";
-	position: absolute;
-	inset: 0;
-	background: repeating-linear-gradient(
-		-55deg,
-		transparent 0 8px,
-		rgba(255, 255, 255, 0.06) 8px 12px
-	);
-	pointer-events: none;
+	background: #808080;
 }
 #status-label {
-	text-align: center;
+	margin-top: 10px;
 	font-size: 14px;
-	letter-spacing: 0.08em;
-	color: #c9b896;
-	text-transform: uppercase;
+	color: #222;
+	text-align: center;
 }
 #status-notice {
 	display: none;
-	background-color: #5b3943;
-	border-radius: 0.5rem;
-	border: 1px solid #9b3943;
-	color: #e0e0e0;
-	line-height: 1.3;
-	margin: 0 2rem;
-	overflow: hidden;
-	padding: 1rem;
+	margin-top: 12px;
+	color: #400;
 	text-align: center;
-	z-index: 1;
-}
-#fps-graph {
-	position: fixed;
-	top: 10px;
-	left: 10px;
-	width: 160px;
-	height: 56px;
-	background: rgba(0, 0, 0, 0.72);
-	border-radius: 6px;
-	padding: 6px;
-	z-index: 9;
-	display: none;
-}
-#fps-canvas {
-	width: 100%;
-	height: 100%;
-	display: block;
 }
 		</style>
-		<link id="-gd-engine-icon" rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/bitball41/vena@5ce1a6387cc789221ae8c3556d9e9e467733f077/index.icon.png">
-		<link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/bitball41/vena@5ce1a6387cc789221ae8c3556d9e9e467733f077/index.apple-touch-icon.png">
+		<link rel="icon" type="image/png" href="assets/index.icon.png">
+		<link rel="apple-touch-icon" href="assets/index.apple-touch-icon.png">
 	</head>
 	<body>
 		<div id="wrap">
@@ -147,19 +77,16 @@ body {
 		</div>
 		<noscript>Your browser does not support JavaScript.</noscript>
 		<div id="status">
-			<img id="status-splash" class="fullsize--true" src="https://cdn.jsdelivr.net/gh/bitball41/vena@5ce1a6387cc789221ae8c3556d9e9e467733f077/index.png" alt="Vena">
 			<div id="status-progress">
-				<div id="status-percent">0%</div>
-				<div id="status-track"><div id="status-fill"></div></div>
-				<div id="status-label">Loading VENA…</div>
+				<div id="bar"><div id="status-fill"></div></div>
+				<div id="status-label">0%</div>
 			</div>
 			<div id="status-notice"></div>
 		</div>
-		<div id="fps-graph"><canvas id="fps-canvas" width="148" height="44"></canvas></div>
 		<script>
 window.VENA_LAUNCH = {
-	base: "https://cdn.jsdelivr.net/gh/bitball41/vena@5ce1a6387cc789221ae8c3556d9e9e467733f077/",
-	executable: "https://cdn.jsdelivr.net/gh/bitball41/vena@5ce1a6387cc789221ae8c3556d9e9e467733f077/index",
+	base: "packages/",
+	executable: "packages/index",
 	pckBytes: 154862663,
 	pckParts: 8,
 	wasmBytes: 1508095,
@@ -168,391 +95,7 @@ window.VENA_LAUNCH = {
 	renderCap: { w: 960, h: 540 },
 };
 		</script>
-		<script src="https://cdn.jsdelivr.net/gh/bitball41/vena@5ce1a6387cc789221ae8c3556d9e9e467733f077/index.js"></script>
-		<script>
-/* Shared VENA web-shell: loader UI, audio hooks, FPS cap, progress. */
-(function () {
-	"use strict";
-
-	const L = window.VENA_LAUNCH || {};
-	const BASE = L.base || "";
-	const WORKLET_BASE = L.workletBase || BASE || document.baseURI;
-	const PCK_BYTES = L.pckBytes;
-	const PCK_PARTS = L.pckParts;
-	const WASM_BYTES = L.wasmBytes;
-	const SIDE_WASM_BYTES = L.sideWasmBytes;
-	const SIDE_WASM_PARTS = L.sideWasmParts;
-	const RENDER_CAP = L.renderCap || { w: 960, h: 540 };
-	const TOTAL_BYTES = PCK_BYTES + SIDE_WASM_BYTES + WASM_BYTES;
-
-	try {
-		Object.defineProperty(window, "devicePixelRatio", {
-			configurable: true,
-			get: function () { return 1; },
-		});
-	} catch (err) {}
-
-	(function wrapAudio() {
-		const Native = window.AudioContext || window.webkitAudioContext;
-		if (!Native) return;
-		function VenaAudioContext(opts) {
-			const next = Object.assign({ latencyHint: "playback" }, opts || {});
-			return new Native(next);
-		}
-		VenaAudioContext.prototype = Native.prototype;
-		Object.setPrototypeOf(VenaAudioContext, Native);
-		window.AudioContext = VenaAudioContext;
-		if ("webkitAudioContext" in window) {
-			window.webkitAudioContext = VenaAudioContext;
-		}
-		if (window.AudioWorklet && AudioWorklet.prototype.addModule) {
-			const orig = AudioWorklet.prototype.addModule;
-			AudioWorklet.prototype.addModule = function (url, init) {
-				const href = String(url);
-				if (href.includes("audio.worklet.js") && !href.includes("position")) {
-					return orig.call(this, new URL("index.audio.worklet.js", WORKLET_BASE).href, init);
-				}
-				if (href.includes("audio.position.worklet.js")) {
-					return orig.call(this, new URL("index.audio.position.worklet.js", WORKLET_BASE).href, init);
-				}
-				return orig.call(this, url, init);
-			};
-		}
-	}());
-
-	const WEB_SETTINGS = `[settings]
-master_volume=1.0
-music_volume=0.75
-sfx_volume=0.75
-ambience_volume=0.75
-window_mode=0
-vsync=true
-max_fps=30
-force_aspect_ratio=false
-low_performance_mode=true
-flow_particles=false
-dust_particles=false
-resource_particles=false
-tile_animations=false
-bonus_animations=false
-world_pause=true
-popup_size=0.6
-ui_scale=0.75
-core_skin=0
-static_background=true
-language="en"
-crt_intensity=0.0
-hide_tile_borders=false
-show_grid_always=false
-danger_vignette=false
-custom_cursor=true
-edge_scrolling=1
-atkinson_font=false
-show_tile_examples=true
-touch_controls=false
-show_hovers=true
-advanced_resource_bar=false
-haptics_enabled=false
-haptics_intensity=1.0
-screen_shake_enabled=false
-screen_shake_intensity=1.0
-`;
-
-	const GODOT_CONFIG = {
-		args: ["--max-fps", "30"],
-		canvas: document.getElementById("canvas"),
-		canvasResizePolicy: 0,
-		emscriptenPoolSize: 4,
-		ensureCrossOriginIsolationHeaders: false,
-		executable: L.executable,
-		experimentalVK: false,
-		fileSizes: {},
-		focusCanvas: true,
-		gdextensionLibs: [],
-		godotPoolSize: 2,
-		serviceWorker: "",
-	};
-	GODOT_CONFIG.fileSizes[BASE + "index.pck"] = PCK_BYTES;
-	GODOT_CONFIG.fileSizes[BASE + "index.wasm"] = WASM_BYTES;
-	GODOT_CONFIG.fileSizes[BASE + "index.side.wasm"] = SIDE_WASM_BYTES;
-	if (!BASE) {
-		GODOT_CONFIG.fileSizes["index.pck"] = PCK_BYTES;
-		GODOT_CONFIG.fileSizes["index.wasm"] = WASM_BYTES;
-		GODOT_CONFIG.fileSizes["index.side.wasm"] = SIDE_WASM_BYTES;
-	}
-
-	const nativeFetch = window.fetch.bind(window);
-	const mergedBlobs = {};
-
-	function mb(n) {
-		return (n / 1048576).toFixed(1);
-	}
-
-	function requestUrl(input) {
-		if (typeof input === "string") return input;
-		if (input instanceof URL) return input.href;
-		if (input && input.url) return input.url;
-		return "";
-	}
-
-	function startCappedGame(override) {
-		engine.config.update(override);
-		const exe = engine.config.executable;
-		const pack = engine.config.mainPack || (exe + ".pck");
-		engine.config.args = ["--main-pack", pack, "--max-fps", "30"];
-		return Promise.all([
-			engine.init(exe),
-			engine.preloadFile(pack, pack),
-		]).then(function () {
-			const buf = new TextEncoder().encode(WEB_SETTINGS).buffer;
-			try { engine.copyToFS("/userfs/settings.cfg", buf); } catch (err) {}
-			try { engine.copyToFS("user://settings.cfg", buf); } catch (err) {}
-			return engine.start();
-		});
-	}
-
-	let downloaded = 0;
-	let lastPct = 0;
-	let phase = "download";
-
-	function bump(n) {
-		downloaded += n;
-		paint();
-	}
-
-	function paint(forcePct, labelText) {
-		const fill = document.getElementById("status-fill");
-		const percent = document.getElementById("status-percent");
-		const label = document.getElementById("status-label");
-		if (!fill || !percent || !label) return;
-		let pct;
-		if (typeof forcePct === "number") {
-			pct = forcePct;
-		} else {
-			pct = Math.floor((downloaded / TOTAL_BYTES) * 100);
-		}
-		pct = Math.max(lastPct, Math.min(100, pct));
-		lastPct = pct;
-		fill.style.width = pct + "%";
-		percent.textContent = pct + "%";
-		if (labelText) {
-			label.textContent = labelText;
-		} else if (phase === "start") {
-			label.textContent = "Starting VENA…";
-		} else {
-			label.textContent = "Loading  " + pct + "%  ·  " + mb(Math.min(downloaded, TOTAL_BYTES)) + " / " + mb(TOTAL_BYTES) + " MB";
-		}
-	}
-
-	async function fetchTracked(url) {
-		const response = await nativeFetch(url);
-		if (!response.ok) {
-			throw new Error("Failed loading file '" + url + "'");
-		}
-		if (!response.body || !response.body.getReader) {
-			const buf = await response.arrayBuffer();
-			bump(buf.byteLength);
-			return buf;
-		}
-		const reader = response.body.getReader();
-		const chunks = [];
-		let len = 0;
-		for (;;) {
-			const step = await reader.read();
-			if (step.done) break;
-			chunks.push(step.value);
-			len += step.value.byteLength;
-			bump(step.value.byteLength);
-		}
-		const out = new Uint8Array(len);
-		let off = 0;
-		for (let i = 0; i < chunks.length; i++) {
-			out.set(chunks[i], off);
-			off += chunks[i].byteLength;
-		}
-		return out.buffer;
-	}
-
-	async function mergeParts(base, count, expected, mime) {
-		const buffers = await Promise.all(Array.from({ length: count }, function (_, i) {
-			return fetchTracked(base + ".part" + (i + 1));
-		}));
-		let loaded = 0;
-		for (let i = 0; i < buffers.length; i++) {
-			loaded += buffers[i].byteLength;
-		}
-		if (loaded !== expected) {
-			throw new Error("Size mismatch for " + base + " (" + loaded + " != " + expected + ")");
-		}
-		return new Blob(buffers, { type: mime });
-	}
-
-	function blobResponse(key, factory) {
-		mergedBlobs[key] = mergedBlobs[key] || factory();
-		return mergedBlobs[key].then(function (blob) {
-			return new Response(blob, {
-				headers: { "Content-Type": blob.type || "application/octet-stream" },
-			});
-		});
-	}
-
-	function patchedFetch(input, init) {
-		const url = requestUrl(input);
-		if (url.includes("index.pck") && !url.includes(".part")) {
-			return blobResponse("pck", function () {
-				return mergeParts(BASE + "index.pck", PCK_PARTS, PCK_BYTES, "application/octet-stream");
-			});
-		}
-		if (url.includes("index.side.wasm") && !url.includes(".part")) {
-			return blobResponse("side", function () {
-				return mergeParts(BASE + "index.side.wasm", SIDE_WASM_PARTS, SIDE_WASM_BYTES, "application/wasm");
-			});
-		}
-		if (url.includes("index.wasm") && !url.includes("side") && !url.includes(".part")) {
-			return blobResponse("wasm", function () {
-				return fetchTracked(BASE + "index.wasm").then(function (buf) {
-					return new Blob([buf], { type: "application/wasm" });
-				});
-			});
-		}
-		return nativeFetch(input, init);
-	}
-	window.fetch = patchedFetch;
-
-	if (typeof Engine === "undefined") {
-		window.addEventListener("DOMContentLoaded", function () {
-			const notice = document.getElementById("status-notice");
-			const overlay = document.getElementById("status");
-			if (notice && overlay) {
-				overlay.style.visibility = "visible";
-				notice.style.display = "block";
-				notice.textContent = "Godot engine script failed to load.";
-			}
-		});
-		return;
-	}
-
-	const engine = new Engine(GODOT_CONFIG);
-	window.VENA_ENGINE = engine;
-
-	if (navigator.storage && navigator.storage.persist) {
-		navigator.storage.persist().catch(function () {});
-	}
-
-	(function boot() {
-		const statusOverlay = document.getElementById("status");
-		const statusProgress = document.getElementById("status-progress");
-		const statusNotice = document.getElementById("status-notice");
-		const fpsGraph = document.getElementById("fps-graph");
-		const fpsCanvas = document.getElementById("fps-canvas");
-
-		let initializing = true;
-		let statusMode = "";
-
-		function setStatusMode(mode) {
-			if (statusMode === mode || !initializing) {
-				return;
-			}
-			if (mode === "hidden") {
-				statusOverlay.remove();
-				initializing = false;
-				startFps();
-				return;
-			}
-			statusOverlay.style.visibility = "visible";
-			statusProgress.style.display = mode === "progress" ? "flex" : "none";
-			statusNotice.style.display = mode === "notice" ? "block" : "none";
-			statusMode = mode;
-		}
-
-		function setStatusNotice(text) {
-			statusNotice.textContent = "";
-			text.split("\n").forEach(function (line) {
-				statusNotice.appendChild(document.createTextNode(line));
-				statusNotice.appendChild(document.createElement("br"));
-			});
-		}
-
-		function displayFailureNotice(err) {
-			console.error(err);
-			if (err instanceof Error) {
-				setStatusNotice(err.message);
-			} else if (typeof err === "string") {
-				setStatusNotice(err);
-			} else {
-				setStatusNotice("An unknown error occurred.");
-			}
-			setStatusMode("notice");
-			initializing = false;
-		}
-
-		function startFps() {
-			if (!fpsCanvas || !fpsGraph) return;
-			const ctx = fpsCanvas.getContext("2d");
-			const hist = [];
-			let last = performance.now();
-			let frames = 0;
-			function tick(now) {
-				frames++;
-				const fps = 1000 / Math.max(now - last, 1);
-				last = now;
-				if (frames % 2 === 0) {
-					hist.push(fps);
-					if (hist.length > 74) hist.shift();
-					ctx.clearRect(0, 0, 148, 44);
-					for (let i = 0; i < hist.length; i++) {
-						const f = hist[i];
-						const h = Math.min(f / 30, 1) * 28;
-						ctx.fillStyle = f > 26 ? "#6f6" : f > 20 ? "#fa3" : "#f44";
-						ctx.fillRect(i * 2, 44 - h, 1.7, h);
-					}
-					ctx.fillStyle = "#fff";
-					ctx.font = "bold 12px monospace";
-					ctx.fillText(Math.round(fps) + " FPS", 6, 14);
-				}
-				requestAnimationFrame(tick);
-			}
-			fpsGraph.style.display = "block";
-			requestAnimationFrame(tick);
-		}
-
-		const gameCanvas = document.getElementById("canvas");
-		gameCanvas.width = RENDER_CAP.w;
-		gameCanvas.height = RENDER_CAP.h;
-
-		const missing = Engine.getMissingFeatures({ threads: false });
-		if (missing.length !== 0) {
-			displayFailureNotice("Missing browser features:\n" + missing.join("\n"));
-			return;
-		}
-
-		setStatusMode("progress");
-		paint(0);
-		mergedBlobs.pck = mergeParts(BASE + "index.pck", PCK_PARTS, PCK_BYTES, "application/octet-stream");
-		mergedBlobs.side = mergeParts(BASE + "index.side.wasm", SIDE_WASM_PARTS, SIDE_WASM_BYTES, "application/wasm");
-		mergedBlobs.wasm = fetchTracked(BASE + "index.wasm").then(function (buf) {
-			return new Blob([buf], { type: "application/wasm" });
-		});
-
-		Promise.all([mergedBlobs.pck, mergedBlobs.side, mergedBlobs.wasm]).then(function () {
-			phase = "start";
-			paint(100, "Starting VENA…");
-		}).catch(displayFailureNotice);
-
-		startCappedGame({
-			onProgress: function (current, total) {
-				if (phase === "start") {
-					paint(100, "Starting VENA…");
-					return;
-				}
-				if (current > 0 && total > 0) {
-					paint();
-				}
-			},
-		}).then(function () { setStatusMode("hidden"); }, displayFailureNotice);
-	}());
-}());
-
-		</script>
+		<script src="packages/index.js"></script>
+		<script src="vena-boot.js"></script>
 	</body>
 </html>

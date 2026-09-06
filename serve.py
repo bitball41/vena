@@ -59,8 +59,8 @@ def main():
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
     ip = lan_ip()
     print("Vena Steam demo web build")
-    print(f"  local:      http://127.0.0.1:{args.port}/")
-    print(f"  chromebook: http://{ip}:{args.port}/")
+    print(f"  local:      http://127.0.0.1:{args.port}/vena.html")
+    print(f"  chromebook: http://{ip}:{args.port}/vena.html")
     print("Ctrl+C to stop. Keep this PC and the Chromebook on the same Wi-Fi.")
     httpd.serve_forever()
 
